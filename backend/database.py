@@ -32,4 +32,6 @@ class Database:
             )
             """
         )
+        conn.commit()
+        conn.close()
         
