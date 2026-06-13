@@ -14,12 +14,12 @@ class AuthServices:
         hashed=self.hash_password(password)
         cursor.execute(
             """"
-            INSERT INTO user(email,password) values(?,?)
+            INSERT INTO user(email,password) values(%s,%s)
             """,(email,hashed)
         )
         conn.commit()
         conn.close()
-        
+        cursor.close()
         return {
             "message":"user register successfully",
             "user":{
@@ -33,7 +33,7 @@ class AuthServices:
         cursor.execute(
             """
             SELECT (user_id,email,password) FROM user where 
-            email = ? AND password =?
+            email = %s AND password = %s
             """,(email,password))
         user=cursor.fetchone()
         conn.close()
