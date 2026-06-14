@@ -51,53 +51,57 @@ class Product:
             "total_product":product[4],
             "total_price":product[5],
         }
-    def patch_product(self,product_id,**kwargs):
+    
+    def patch_product(self,product_id,*kwargs):
         conn=self.db.connect()
         cursor=conn.cursor()
+        
         fields=[]
         value=[]
+        
         allowed_fields=["product_name","per_product_price","total_product"]
         
         for key in allowed_fields:
-            if key in kwargs and kwargs[key] is not None:
-                fields.append(f"{key}=%s")
+            if key and kwargs[key] is not None:
+                fields.append(f"{key} = %s")
                 value.append(kwargs[key])
-                
-        if "per_product_price" in kwargs or  "total_product" in kwargs:
-            price=kwargs.get('per_product_price')
-            qty=kwargs.get('total_product')
+        if "per_product_price" in kwargs or "total_product" in kwargs:
+            price=kwargs.get("per_product_price")
+            qty=kwargs.get("total_product")
+            
             cursor.execute(
                 """
                 SELECT (per_product_price,total_product)
-                FROM product WHERE id = %s
-                """,(product_id)
+                FROM product
+                WHERE id = %s
+                """,product_id
                 
             )
             old_price,old_qty=cursor.fetchone()
-            price =price if price is None else old_price
-            qty=qty if price is None else old_qty
-            
-            fields.append("total_price = %s")
-            value.append(price*qty)
+            price=price if price is not None else old_price
+            qty=qty if qty is not None else old_qty
+            fields=["total_product = %s "]
+            value=[price * qty]
         value.append(product_id)
-        query=f"""
-            UPDATE product 
-            SET{", ".join(fields)}
-            WHERE id = %s
-            RETURNING id
-        """
-        
+        query=cursor.execute(
+            f"""
+            UPDATE product
+            SET {" ,".join(fields)}
+            WHERE id =%s
+            RETURNING id 
+            """
+            
+        )
         cursor.execute(query,value)
-        updated_id=cursor.fetchone()[0]
+        udpated_id=cursor.fetchone()[0]
         
-        conn.commit()
-        cursor.close()
+        cursor.commit()
         conn.close()
+        cursor.close()
         
         return {
-            "id":updated_id,
-            
-        }
+            "updated_id":udpated_id
+        }       
             
             
         
