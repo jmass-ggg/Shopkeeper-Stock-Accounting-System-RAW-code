@@ -20,4 +20,6 @@ class AuthApi:
         data=self.read()
         self.respond(self.service.create(data["email"],data["password"]))
         
-    
+    def login(self):
+        data=self.read()
+        self.respond(self.service.login(data["email"],data["password"]))
